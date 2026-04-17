@@ -4,12 +4,12 @@ export default function DashboardTimetable() {
     return (
         <>
             {/* Dashboard Header */}
-            <header className="mb-10 flex justify-between items-end border-b border-outline-variant/20 pb-6">
+            <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-outline-variant/20 pb-6">
                 <div>
                     <h2 className="font-headline text-3xl text-on-surface font-extrabold tracking-tight">Good morning, Dr. Aris.</h2>
                     <p className="font-label text-sm text-on-surface-variant font-medium mt-1">Here is what's happening today.</p>
                 </div>
-                <div className="text-right">
+                <div className="text-left md:text-right">
                     <p className="font-headline text-base font-bold text-on-surface">Fall Semester 2024</p>
                     <p className="font-body text-sm text-on-surface-variant font-medium">Week 7 • Term active</p>
                 </div>
@@ -97,7 +97,7 @@ export default function DashboardTimetable() {
                                     <span>09:00</span>
                                 </div>
                                 {/* Mon */}
-                                <div className="p-2 border-r border-outline-variant/20 relative min-h-[100px]">
+                                <div className="p-2 border-r border-outline-variant/20 relative min-h-[140px]">
                                     <div className="absolute inset-1.5 bg-surface-container-low border-l-4 border-secondary rounded-md p-3 hover:shadow-md transition-all cursor-pointer">
                                         <p className="font-headline text-sm font-bold text-on-surface leading-tight mb-2">Intro to Physics</p>
                                         <div className="space-y-1">
@@ -106,9 +106,9 @@ export default function DashboardTimetable() {
                                         </div>
                                     </div>
                                 </div>
-                                {/* Tue */} <div className="p-2 border-r border-outline-variant/20 min-h-[100px]"></div>
+                                {/* Tue */} <div className="p-2 border-r border-outline-variant/20 min-h-[140px]"></div>
                                 {/* Wed */}
-                                <div className="p-2 border-r border-outline-variant/20 relative min-h-[100px]">
+                                <div className="p-2 border-r border-outline-variant/20 relative min-h-[140px]">
                                     <div className="absolute inset-1.5 bg-surface-container-low border-l-4 border-secondary rounded-md p-3 hover:shadow-md transition-all cursor-pointer">
                                         <p className="font-headline text-sm font-bold text-on-surface leading-tight mb-2">Quantum Mech</p>
                                         <div className="space-y-1">
@@ -117,9 +117,9 @@ export default function DashboardTimetable() {
                                         </div>
                                     </div>
                                 </div>
-                                {/* Thu */} <div className="p-2 border-r border-outline-variant/20 min-h-[100px] bg-primary/5"></div>
-                                {/* Fri */} <div className="p-2 border-r border-outline-variant/20 min-h-[100px]"></div>
-                                {/* Sat */} <div className="p-2 min-h-[100px]"></div>
+                                {/* Thu */} <div className="p-2 border-r border-outline-variant/20 min-h-[140px] bg-primary/5"></div>
+                                {/* Fri */} <div className="p-2 border-r border-outline-variant/20 min-h-[140px]"></div>
+                                {/* Sat */} <div className="p-2 min-h-[140px]"></div>
                             </div>
 
                             {/* 10:30 AM */}
@@ -127,9 +127,9 @@ export default function DashboardTimetable() {
                                 <div className="p-3 text-right font-label text-xs text-on-surface-variant font-medium border-r border-outline-variant/20">
                                     <span>10:30</span>
                                 </div>
-                                {/* Mon */} <div className="p-2 border-r border-outline-variant/20 min-h-[100px]"></div>
+                                {/* Mon */} <div className="p-2 border-r border-outline-variant/20 min-h-[140px]"></div>
                                 {/* Tue */}
-                                <div className="p-2 border-r border-outline-variant/20 relative min-h-[100px]">
+                                <div className="p-2 border-r border-outline-variant/20 relative min-h-[140px]">
                                     <div className="absolute inset-1.5 bg-surface-container-low border-l-4 border-tertiary rounded-md p-3 hover:shadow-md transition-all cursor-pointer">
                                         <p className="font-headline text-sm font-bold text-on-surface leading-tight mb-2">Office Hours</p>
                                         <div className="space-y-1">
@@ -138,9 +138,9 @@ export default function DashboardTimetable() {
                                         </div>
                                     </div>
                                 </div>
-                                {/* Wed */} <div className="p-2 border-r border-outline-variant/20 min-h-[100px]"></div>
+                                {/* Wed */} <div className="p-2 border-r border-outline-variant/20 min-h-[140px]"></div>
                                 {/* Thu (CURRENT CLASS) */}
-                                <div className="p-2 border-r border-outline-variant/20 relative min-h-[100px] bg-primary/5">
+                                <div className="p-2 border-r border-outline-variant/20 relative min-h-[140px] bg-primary/5">
                                     <div className="absolute inset-1.5 z-10 bg-primary/10 border border-primary/30 rounded-md p-3 shadow-sm flex flex-col justify-between">
                                         <div>
                                             <p className="font-headline text-sm font-extrabold text-primary leading-tight mb-2">Advanced Physics 301</p>
@@ -158,8 +158,8 @@ export default function DashboardTimetable() {
                                         </p>
                                     </div>
                                 </div>
-                                {/* Fri */} <div className="p-2 border-r border-outline-variant/20 min-h-[100px]"></div>
-                                {/* Sat */} <div className="p-2 min-h-[100px]"></div>
+                                {/* Fri */} <div className="p-2 border-r border-outline-variant/20 min-h-[140px]"></div>
+                                {/* Sat */} <div className="p-2 min-h-[140px]"></div>
                             </div>
 
                             {/* 12:00 PM */}

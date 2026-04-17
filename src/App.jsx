@@ -7,6 +7,8 @@ import ManualAttendanceSheet from './pages/ManualAttendanceSheet';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import AssignmentOverview from './pages/AssignmentOverview';
 import AssignmentCreator from './pages/AssignmentCreator';
+import RaisedTicketsList from './pages/RaisedTicketsList';
+import TicketDetail from './pages/TicketDetail';
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
         <Route path="analytics" element={<AnalyticsDashboard />} />
         <Route path="assignments" element={<AssignmentOverview />} />
         <Route path="assignments/new" element={<AssignmentCreator />} />
+        <Route path="tickets" element={<RaisedTicketsList />} />
+        <Route path="tickets/:ticketId" element={<TicketDetail />} />
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

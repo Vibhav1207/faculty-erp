@@ -3,10 +3,10 @@ import React from 'react';
 export default function AnalyticsDashboard() {
     return (
         <div className="max-w-[1400px] w-full mx-auto">
-            {/* Page Header & Filters */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
+            {/* Page Header & Primary Actions */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-10">
                 <div>
-                    <h2 className="font-headline text-4xl font-extrabold text-on-surface tracking-tight mb-2">Performance Analytics</h2>
+                    <h1 className="text-3xl font-headline font-extrabold text-on-surface tracking-tight mb-2">Analytics Overview</h1>
                     <p className="text-on-surface-variant text-sm max-w-xl">Comprehensive overview of academic engagement and outcome metrics across all assigned cohorts.</p>
                 </div>
                 
