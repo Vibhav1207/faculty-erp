@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase';
 
 export default function DashboardLayout() {
     const location = useLocation();
@@ -7,6 +9,15 @@ export default function DashboardLayout() {
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
     const closeSidebar = () => setIsSidebarOpen(false);
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+        } catch (error) {
+            // Keep UI stable even if logout request fails.
+            console.error('Logout failed:', error);
+        }
+        closeSidebar();
+    };
 
     return (
         <div className="font-body text-on-surface antialiased bg-surface overflow-x-hidden min-h-screen">
@@ -94,10 +105,10 @@ export default function DashboardLayout() {
                 </ul>
 
                 <div className="px-4 mt-auto border-t border-outline-variant/20 pt-4">
-                    <Link to="/login" className="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors font-medium">
+                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors font-medium">
                         <span className="material-symbols-outlined text-xl">logout</span>
                         <span>Logout</span>
-                    </Link>
+                    </button>
                 </div>
             </nav>
 

@@ -1,12 +1,87 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+    createUserWithEmailAndPassword,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+} from 'firebase/auth';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
+
+const DEMO_LOGIN_EMAIL = import.meta.env.VITE_DEMO_LOGIN_EMAIL || 'demo.faculty@example.com';
+const DEMO_LOGIN_PASSWORD = import.meta.env.VITE_DEMO_LOGIN_PASSWORD || 'ChangeMe123!';
 
 export default function LoginScreen() {
     const navigate = useNavigate();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
-    const handleLogin = (e) => {
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                navigate('/dashboard', { replace: true });
+            }
+        });
+
+        return unsubscribe;
+    }, [navigate]);
+
+    const ensureFacultyDocument = async (user) => {
+        await setDoc(
+            doc(db, 'faculty_users', user.uid),
+            {
+                email: user.email || '',
+                role: 'faculty',
+                lastLoginAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            },
+            { merge: true },
+        );
+    };
+
+    const handleLogin = async (e) => {
         e.preventDefault();
-        navigate('/dashboard');
+        setErrorMessage('');
+        setIsSubmitting(true);
+
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+            await ensureFacultyDocument(userCredential.user);
+            navigate('/dashboard', { replace: true });
+        } catch (error) {
+            setErrorMessage(error.message || 'Login failed. Check your credentials.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDemoAccount = async () => {
+        setErrorMessage('');
+        setIsSubmitting(true);
+        setEmail(DEMO_LOGIN_EMAIL);
+        setPassword(DEMO_LOGIN_PASSWORD);
+
+        try {
+            let userCredential;
+            try {
+                userCredential = await createUserWithEmailAndPassword(auth, DEMO_LOGIN_EMAIL, DEMO_LOGIN_PASSWORD);
+            } catch (error) {
+                if (error.code === 'auth/email-already-in-use') {
+                    userCredential = await signInWithEmailAndPassword(auth, DEMO_LOGIN_EMAIL, DEMO_LOGIN_PASSWORD);
+                } else {
+                    throw error;
+                }
+            }
+
+            await ensureFacultyDocument(userCredential.user);
+            navigate('/dashboard', { replace: true });
+        } catch (error) {
+            setErrorMessage(error.message || 'Unable to create or sign in demo account.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -37,12 +112,20 @@ export default function LoginScreen() {
                     <form className="space-y-5" onSubmit={handleLogin}>
                         {/* ID/Email Input */}
                         <div className="space-y-1.5">
-                            <label className="block font-label text-[11px] uppercase tracking-[0.05em] text-on-surface-variant font-semibold" htmlFor="faculty-id">Faculty ID / Email</label>
+                            <label className="block font-label text-[11px] uppercase tracking-[0.05em] text-on-surface-variant font-semibold" htmlFor="faculty-id">Email</label>
                             <div className="relative">
                                 <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline">
                                     <span className="material-symbols-outlined text-[20px]">badge</span>
                                 </span>
-                                <input className="w-full bg-surface-container-highest border-none rounded-[0.25rem] py-3 pl-11 pr-4 text-on-surface focus:ring-2 focus:ring-primary focus:outline-none transition-shadow text-sm font-medium placeholder:text-outline-variant placeholder:font-normal" id="faculty-id" placeholder="Enter identification" type="text" />
+                                <input
+                                    className="w-full bg-surface-container-highest border-none rounded-[0.25rem] py-3 pl-11 pr-4 text-on-surface focus:ring-2 focus:ring-primary focus:outline-none transition-shadow text-sm font-medium placeholder:text-outline-variant placeholder:font-normal"
+                                    id="faculty-id"
+                                    placeholder="Enter email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(event) => setEmail(event.target.value)}
+                                    required
+                                />
                             </div>
                         </div>
 
@@ -56,24 +139,45 @@ export default function LoginScreen() {
                                 <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline">
                                     <span className="material-symbols-outlined text-[20px]">lock</span>
                                 </span>
-                                <input className="w-full bg-surface-container-highest border-none rounded-[0.25rem] py-3 pl-11 pr-4 text-on-surface focus:ring-2 focus:ring-primary focus:outline-none transition-shadow text-sm font-medium placeholder:text-outline-variant placeholder:font-normal" id="password" placeholder="••••••••" type="password" />
+                                <input
+                                    className="w-full bg-surface-container-highest border-none rounded-[0.25rem] py-3 pl-11 pr-4 text-on-surface focus:ring-2 focus:ring-primary focus:outline-none transition-shadow text-sm font-medium placeholder:text-outline-variant placeholder:font-normal"
+                                    id="password"
+                                    placeholder="••••••••"
+                                    type="password"
+                                    value={password}
+                                    onChange={(event) => setPassword(event.target.value)}
+                                    required
+                                />
                             </div>
                         </div>
+
+                        {errorMessage && (
+                            <p className="text-sm text-error pt-1">{errorMessage}</p>
+                        )}
 
                         {/* Spacer */}
                         <div className="pt-2"></div>
 
                         {/* Submit Action */}
-                        <button className="w-full bg-gradient-to-b from-primary to-primary-dim text-white font-medium py-3 px-4 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all flex justify-center items-center gap-2" type="submit">
-                            <span className="text-sm tracking-wide">Login</span>
+                        <button disabled={isSubmitting} className="w-full bg-gradient-to-b from-primary to-primary-dim text-white font-medium py-3 px-4 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all flex justify-center items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed" type="submit">
+                            <span className="text-sm tracking-wide">{isSubmitting ? 'Please wait...' : 'Login'}</span>
                             <span className="material-symbols-outlined text-[18px]">login</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={handleDemoAccount}
+                            disabled={isSubmitting}
+                            className="w-full bg-surface-container-highest text-on-surface font-medium py-3 px-4 rounded-xl hover:bg-surface-container-low transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                            Create / Login Demo Account
                         </button>
                     </form>
                 </div>
 
                 {/* Footer Context */}
                 <div className="mt-8 text-center flex flex-col items-center justify-center gap-2">
-                    <p className="text-[11px] text-outline font-medium tracking-wide">Protected by Institutional Single Sign-On</p>
+                    <p className="text-[11px] text-outline font-medium tracking-wide">Use the demo button to create/sign in a local demo faculty account.</p>
                 </div>
             </main>
         </div>

@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginScreen from './pages/LoginScreen';
 import DashboardLayout from './components/DashboardLayout';
+import ProtectedRoute from './components/ProtectedRoute';
 import DashboardTimetable from './pages/DashboardTimetable';
 import AttendanceSelection from './pages/AttendanceSelection';
 import ManualAttendanceSheet from './pages/ManualAttendanceSheet';
@@ -14,7 +15,14 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginScreen />} />
-      <Route path="/" element={<DashboardLayout />}>
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardTimetable />} />
         <Route path="attendance" element={<AttendanceSelection />} />

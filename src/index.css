@@ -17,6 +17,19 @@
   }
 }
 
+@layer components {
+  .attendance-select option {
+    color: #181c22;
+    background-color: #f9f9ff;
+  }
+
+  .attendance-select option:checked,
+  .attendance-select option:hover {
+    color: #001b3e;
+    background-color: #d6e3ff;
+  }
+}
+
 @keyframes shimmer {
   100% {
     transform: translateX(100%);

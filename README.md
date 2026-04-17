@@ -66,7 +66,15 @@ Navigate inside the `faculty-nexus` directory and install the Node packages.
 npm install
 ```
 
-### 2. Start the Development Server
+### 2. Configure Firebase Environment Variables
+Copy `.env.example` to `.env` (or create it) and update values if needed.
+```bash
+cp .env.example .env       # macOS/Linux
+copy .env.example .env     # Windows (PowerShell/CMD)
+```
+Populate your Firebase web app values in `.env`. You can also set `VITE_DEMO_LOGIN_EMAIL` and `VITE_DEMO_LOGIN_PASSWORD` for the demo-login button.
+
+### 3. Start the Development Server
 Launch the local Vite server. The terminal will provide a localhost URL to view the frontend in your browser.
 ```bash
 npm run dev
