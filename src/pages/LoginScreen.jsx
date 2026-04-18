@@ -7,6 +7,7 @@ import {
 } from 'firebase/auth';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { seedFacultyData, FACULTY_PROFILE } from '../lib/seedData';
 
 const DEMO_LOGIN_EMAIL = import.meta.env.VITE_DEMO_LOGIN_EMAIL || 'demo.faculty@example.com';
 const DEMO_LOGIN_PASSWORD = import.meta.env.VITE_DEMO_LOGIN_PASSWORD || 'ChangeMe123!';
@@ -29,10 +30,15 @@ export default function LoginScreen() {
     }, [navigate]);
 
     const ensureFacultyDocument = async (user) => {
+        // Seed faculty data (profile, subjects, timetable) into Firestore
+        await seedFacultyData(user.uid, user.email);
+
+        // Also update last login time
         await setDoc(
             doc(db, 'faculty_users', user.uid),
             {
                 email: user.email || '',
+                name: FACULTY_PROFILE.name,
                 role: 'faculty',
                 lastLoginAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),

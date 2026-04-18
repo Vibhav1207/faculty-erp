@@ -1,23 +1,26 @@
 import React, { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
-import { auth } from '../firebase';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function DashboardLayout() {
     const location = useLocation();
+    const { facultyProfile, logout } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
     const closeSidebar = () => setIsSidebarOpen(false);
     const handleLogout = async () => {
-        try {
-            await signOut(auth);
-        } catch (error) {
-            // Keep UI stable even if logout request fails.
-            console.error('Logout failed:', error);
-        }
+        await logout();
         closeSidebar();
     };
+
+    const facultyName = facultyProfile?.name || 'Faculty';
+    const facultyInitials = facultyName
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
 
     return (
         <div className="font-body text-on-surface antialiased bg-surface overflow-x-hidden min-h-screen">
@@ -104,7 +107,17 @@ export default function DashboardLayout() {
                     </li>
                 </ul>
 
-                <div className="px-4 mt-auto border-t border-outline-variant/20 pt-4">
+                {/* Faculty Profile Section at Bottom */}
+                <div className="px-4 mt-auto border-t border-outline-variant/20 pt-4 space-y-2">
+                    <div className="flex items-center gap-3 px-4 py-2">
+                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
+                            {facultyInitials}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-sm font-semibold text-on-surface truncate">{facultyName}</p>
+                            <p className="text-[10px] text-on-surface-variant truncate">{facultyProfile?.department || 'Faculty'}</p>
+                        </div>
+                    </div>
                     <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors font-medium">
                         <span className="material-symbols-outlined text-xl">logout</span>
                         <span>Logout</span>
@@ -149,9 +162,11 @@ export default function DashboardLayout() {
                     
                     {/* Profile Action */}
                     <button className="flex items-center gap-2 lg:gap-3 hover:bg-surface-container-low px-1 lg:px-2 py-1.5 rounded-lg transition-colors">
-                        <img alt="Faculty Portrait" className="w-8 h-8 rounded-full object-cover ring-2 ring-primary/10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUnKPosSLFDS79fTTigieWoLORVuscC0yjfYGwCAIa4bjPx_GCxxYPtYvrvlpkuIkMNE6KxHIFKXO8gpJlO8jmbCmXRUL8KHlcv8avVvPEQH0IdeGbYoHlZPI8r26A8TpySaxoK8XcHZF5Ia6BJHSY6uRbpO2kBnJxcYNHPV0AAd4i1wxSzA-dQ2wIsIxVidcAj7ytJMRGXGSbT3wpX2mPdgapIpXp825k7tVh2KSmiIsfI390NgBuXhQ4PSQivm_NhCtCDZKfNUAU" />
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs ring-2 ring-primary/10">
+                            {facultyInitials}
+                        </div>
                         <div className="text-left hidden lg:flex items-center gap-1">
-                            <span className="font-semibold text-on-surface text-sm">Profile</span>
+                            <span className="font-semibold text-on-surface text-sm">{facultyName}</span>
                             <span className="material-symbols-outlined text-lg text-on-surface-variant">expand_more</span>
                         </div>
                     </button>

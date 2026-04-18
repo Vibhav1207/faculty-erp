@@ -4,6 +4,8 @@ import DashboardLayout from './components/DashboardLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardTimetable from './pages/DashboardTimetable';
 import AttendanceSelection from './pages/AttendanceSelection';
+import FaceAttendance from './pages/FaceAttendance';
+import QRAttendance from './pages/QRAttendance';
 import ManualAttendanceSheet from './pages/ManualAttendanceSheet';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import AssignmentOverview from './pages/AssignmentOverview';
@@ -26,6 +28,8 @@ function App() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardTimetable />} />
         <Route path="attendance" element={<AttendanceSelection />} />
+        <Route path="attendance/face" element={<FaceAttendance />} />
+        <Route path="attendance/qr" element={<QRAttendance />} />
         <Route path="attendance/manual" element={<ManualAttendanceSheet />} />
         <Route path="analytics" element={<AnalyticsDashboard />} />
         <Route path="assignments" element={<AssignmentOverview />} />

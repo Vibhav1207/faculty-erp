@@ -1,22 +1,15 @@
-import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-const courseOptions = [
-    { value: 'cs101', label: 'CS101: Introduction to Computer Science' },
-    { value: 'eng204', label: 'ENG204: Advanced Technical Writing' },
-    { value: 'mat301', label: 'MAT301: Applied Linear Algebra' },
-];
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { SUBJECTS, TIME_SLOTS, getTodaySchedule, getCurrentClass } from '../lib/seedData';
+import { useAuth } from '../contexts/AuthContext';
+import { db } from '../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const cohortOptions = [
-    { value: 'sec_a', label: 'Section A (Morning)' },
-    { value: 'sec_b', label: 'Section B (Afternoon)' },
-    { value: 'lab_1', label: 'Lab Group 01' },
-];
-
-const timeSlotOptions = [
-    { value: 't1', label: '09:00 AM - 10:30 AM' },
-    { value: 't2', label: '11:00 AM - 12:30 PM' },
-    { value: 't3', label: '02:00 PM - 03:30 PM' },
+    { value: 'fy', label: 'First Year (FY)' },
+    { value: 'sy', label: 'Second Year (SY)' },
+    { value: 'ty', label: 'Third Year (TY)' },
+    { value: 'ly', label: 'Final Year (LY)' },
 ];
 
 const verificationMethods = [
@@ -40,12 +33,51 @@ const verificationMethods = [
     },
 ];
 
+// Map subjects to course options
+const courseOptions = SUBJECTS.map((sub) => ({
+    value: sub.id,
+    label: `${sub.code}: ${sub.name} (${sub.yearFull})`,
+}));
+
+// Map time slots to options (only teaching slots, not lunch/buffer)
+const timeSlotOptions = TIME_SLOTS
+    .filter((slot) => !slot.type)
+    .map((slot) => ({
+        value: slot.id,
+        label: slot.label,
+    }));
+
 export default function AttendanceSelection() {
+    const { currentUser } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+    
+    // Auto-detect current class for quick-fill
+    const currentClass = useMemo(() => getCurrentClass(), []);
+
     const [course, setCourse] = useState('');
     const [cohort, setCohort] = useState('');
     const [timeSlot, setTimeSlot] = useState('');
     const [verificationMethod, setVerificationMethod] = useState('face');
+
+    useEffect(() => {
+        if (location.state?.autoFill && currentClass) {
+            setCourse(currentClass.subjectId);
+            setTimeSlot(currentClass.slot?.id || '');
+            if (currentClass.subject?.year) {
+                setCohort(currentClass.subject.year.toLowerCase());
+            } else {
+                setCohort('fy');
+            }
+        }
+    }, [location.state, currentClass]);
+
+    const handleAutoFill = () => {
+        if (currentClass) {
+            setCourse(currentClass.subjectId);
+            setTimeSlot(currentClass.slot?.id || '');
+        }
+    };
 
     const selectedCourseLabel = useMemo(
         () => courseOptions.find((option) => option.value === course)?.label || 'Not selected',
@@ -66,10 +98,43 @@ export default function AttendanceSelection() {
 
     const isSessionReady = Boolean(course && cohort && timeSlot && verificationMethod);
 
-    const handleInitialize = (e) => {
+    const [isInitializing, setIsInitializing] = useState(false);
+
+    const handleInitialize = async (e) => {
         e.preventDefault();
         if (!isSessionReady) return;
-        navigate('/attendance/manual');
+
+        setIsInitializing(true);
+        try {
+            // Write session document to Firestore
+            const sessionData = { 
+                facultyId: currentUser?.uid || 'anon',
+                courseId: course, 
+                cohort, 
+                timeSlot,
+                method: verificationMethod,
+                status: 'active',
+                createdAt: serverTimestamp() 
+            };
+            
+            const docRef = await addDoc(collection(db, 'attendance_sessions'), sessionData);
+            
+            // Pass the generated sessionId via router state
+            const stateData = { ...sessionData, sessionId: docRef.id };
+
+            if (verificationMethod === 'face') {
+                navigate('/attendance/face', { state: stateData });
+            } else if (verificationMethod === 'qr') {
+                navigate('/attendance/qr', { state: stateData });
+            } else {
+                navigate('/attendance/manual', { state: stateData });
+            }
+        } catch (error) {
+            console.error("Failed to initialize session:", error);
+            alert("Failed to create attendance session.");
+        } finally {
+            setIsInitializing(false);
+        }
     };
 
     const handleReset = () => {
@@ -90,6 +155,29 @@ export default function AttendanceSelection() {
                 <h1 className="font-headline text-2xl lg:text-3xl font-extrabold tracking-tight text-on-surface mb-1">Configure Session</h1>
                 <p className="text-on-surface-variant text-sm max-w-3xl">Define lecture details and select a verification method.</p>
             </header>
+
+            {/* Auto-fill current class banner */}
+            {currentClass && (
+                <div className="mb-4 max-w-6xl bg-green-50 border border-green-200 rounded-lg p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
+                        <span className="text-sm font-medium text-green-800">
+                            You have <strong>{currentClass.subject?.name}</strong> right now ({currentClass.slot?.label})
+                        </span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleAutoFill}
+                        className="text-sm font-bold text-green-700 hover:text-green-900 transition-colors flex items-center gap-1"
+                    >
+                        Auto-fill
+                        <span className="material-symbols-outlined text-base">auto_fix_high</span>
+                    </button>
+                </div>
+            )}
 
             {/* Bento Layout Form */}
             <form onSubmit={handleInitialize} className="grid grid-cols-1 xl:grid-cols-12 gap-4 max-w-6xl">
@@ -133,7 +221,7 @@ export default function AttendanceSelection() {
 
                         {/* Class/Cohort Dropdown */}
                         <div className="space-y-2">
-                            <label className="font-label text-xs uppercase tracking-[0.05em] text-on-surface-variant font-medium block" htmlFor="class_cohort">Section / Cohort</label>
+                            <label className="font-label text-xs uppercase tracking-[0.05em] text-on-surface-variant font-medium block" htmlFor="class_cohort">Academic Year</label>
                             <div className="relative">
                                 <select
                                     className="attendance-select w-full bg-surface-container-high text-on-surface rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary appearance-none font-body text-sm transition-all border border-outline-variant/40 cursor-pointer outline-none"
@@ -178,7 +266,7 @@ export default function AttendanceSelection() {
                             <p className="text-sm font-semibold text-on-surface mt-1 truncate">{selectedCourseLabel}</p>
                         </div>
                         <div className="rounded-lg bg-surface-container-low px-3 py-2.5 border border-outline-variant/20">
-                            <p className="text-[11px] uppercase tracking-[0.08em] text-on-surface-variant">Section</p>
+                            <p className="text-[11px] uppercase tracking-[0.08em] text-on-surface-variant">Year</p>
                             <p className="text-sm font-semibold text-on-surface mt-1 truncate">{selectedCohortLabel}</p>
                         </div>
                     </div>
@@ -233,10 +321,10 @@ export default function AttendanceSelection() {
                         <button
                             className="bg-gradient-to-r from-primary to-primary-dim text-white rounded-lg px-4 py-2 text-sm font-headline font-bold tracking-wide hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-1.5 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                             type="submit"
-                            disabled={!isSessionReady}
+                            disabled={!isSessionReady || isInitializing}
                         >
-                            <span className="material-symbols-outlined">play_arrow</span>
-                            Initialize Attendance
+                            <span className="material-symbols-outlined">{isInitializing ? 'sync' : 'play_arrow'}</span>
+                            {isInitializing ? 'Initializing...' : 'Initialize Attendance'}
                         </button>
                     </div>
                 </section>
